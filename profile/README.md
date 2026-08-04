@@ -6,22 +6,28 @@ We build agent infrastructure where the planning, the representation, and the tr
 
 ## The Stack
 
-**[QuantumClaw](https://github.com/yablokolabs/QuantumClaw)** — *runtime*
+#### [QuantumClaw](https://github.com/yablokolabs/QuantumClaw) — runtime
+
 A Rust agent runtime where planning is a first-class, swappable component. Classical solvers today, quantum-inspired now, QPU backends later, with no application rewrite when the backend changes. ShadowCompare runs two planners side by side so you can measure the tradeoff instead of guessing.
 
-**[nexa-core](https://github.com/yablokolabs/nexa-core)** — *representation*
+#### [nexa-core](https://github.com/yablokolabs/nexa-core) — representation
+
 A universal representation runtime. Encode text, JSON, images, audio, or sensor streams into high-dimensional holographic hypervectors and compute directly in encoded space — no tensor pipeline. Corruption-resilient, SIMD-accelerated, 27 Lean 4 theorems on the core algebra.
 
-**[jnaapakam](https://github.com/yablokolabs/jnaapakam)** — *memory*
+#### [jnaapakam](https://github.com/yablokolabs/jnaapakam) — memory
+
 An open protocol for agent memory persistence. A portable soul schema plus an ingest → consolidate → query server, so an agent's identity and context survive restarts and move between frameworks.
 
-**[truthlens](https://github.com/yablokolabs/truthlens)** — *trust*
+#### [truthlens](https://github.com/yablokolabs/truthlens) — trust
+
 Hallucination detection and trust scoring for LLM output. Zero API calls, zero model inference, runs locally in microseconds. Every scoring property — bounds, monotonicity, composition — proven in Lean 4.
 
-**[gridcrawler-agent](https://github.com/yablokolabs/gridcrawler-agent)** · **[hermes-sentinel](https://github.com/yablokolabs/hermes-sentinel)** — *reference agents*
+#### [gridcrawler-agent](https://github.com/yablokolabs/gridcrawler-agent) · [hermes-sentinel](https://github.com/yablokolabs/hermes-sentinel) — reference agents
+
 Working systems that show the boundaries in practice. GridCrawler retrieves utility billing data and structurally cannot make a payment. Hermes Sentinel performs Kubernetes root-cause analysis and structurally cannot mutate a workload. Both treat observed content as untrusted input.
 
-**[quantaforge](https://github.com/yablokolabs/quantaforge)** — *quantum*
+#### [quantaforge](https://github.com/yablokolabs/quantaforge) — quantum
+
 Simulation-first quantum platform: state-vector and stabilizer simulators, surface-code and LDPC error correction, Lean 4 proofs of the underlying gate algebra. Simulation software, honestly scoped — not hardware control.
 
 ## MCP Servers
