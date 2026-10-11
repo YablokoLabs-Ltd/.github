@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Sovra Verify">
+  <title>Sovra Verify</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E6FFFA"/><stop offset="1" stop-color="#CCFBF1"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g transform="translate(256 262) scale(0.86) translate(-256 -256)">
+  <defs>
+    <linearGradient id="ish" x1="256" y1="56" x2="256" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B3A6B"/><stop offset="1" stop-color="#0B1A36"/>
+    </linearGradient>
+    <linearGradient id="iok" x1="196" y1="330" x2="352" y2="206" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
+  </defs>
+  <!-- shield: sovereignty / data stays private -->
+  <path d="M256 56 L408 106 V232 C408 342 344 416 256 458 C168 416 104 342 104 232 V106 Z" fill="url(#ish)"/>
+  <!-- document under audit -->
+  <path d="M190 136 H292 L332 176 V326 Q332 344 314 344 H190 Q172 344 172 326 V154 Q172 136 190 136 Z" fill="#F8FAFC"/>
+  <path d="M292 136 V162 Q292 176 306 176 H332 Z" fill="#CBD5E1"/>
+  <!-- claims; the highlighted one is the verified claim -->
+  <rect x="196" y="176" width="72" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="196" y="206" width="112" height="14" rx="7" fill="url(#iok)"/>
+  <rect x="196" y="236" width="88" height="14" rx="7" fill="#94A3B8"/>
+  <!-- proof: check mark breaking out of the page, knocked out of the shield -->
+  <path d="M206 292 L246 330 L342 228" fill="none" stroke="url(#ish)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M206 292 L246 330 L342 228" fill="none" stroke="url(#iok)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

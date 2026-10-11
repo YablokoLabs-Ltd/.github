@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Sovra Verify">
+  <title>Sovra Verify</title>
+  <defs>
+    <linearGradient id="fsh" x1="256" y1="24" x2="256" y2="496" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B3A6B"/><stop offset="1" stop-color="#0B1A36"/>
+    </linearGradient>
+    <linearGradient id="fok" x1="140" y1="360" x2="380" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 24 L456 88 V240 C456 372 372 456 256 500 C140 456 56 372 56 240 V88 Z" fill="url(#fsh)"/>
+  <path d="M150 268 L224 340 L366 182" fill="none" stroke="url(#fok)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
