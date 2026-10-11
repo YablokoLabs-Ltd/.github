@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yabloko Labs — EWOR Pitch</title>
+
+    <!-- Fonts: Instrument Serif (display), Geist (body), Geist Mono (labels) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME)
+           Change these to change the whole look.
+           Accent green is sampled from the Yabloko Labs logo (#00bf63).
+           =========================================== */
+        :root {
+            --stage-bg: #030604;
+            --slide-bg: #060b08;
+            --surface: #0b1410;
+            --surface-2: #0f1c15;
+            --line: rgba(0, 191, 99, 0.18);
+            --line-soft: rgba(242, 238, 230, 0.08);
+
+            --ink: #f2eee6;
+            --ink-2: #b9c2bc;
+            --ink-3: #7d8a82;
+
+            --accent: #00bf63;
+            --accent-hi: #5ff0a4;
+            --accent-glow: rgba(0, 191, 99, 0.22);
+
+            --font-display: 'Instrument Serif', 'Times New Roman', serif;
+            --font-body: 'Geist', 'Helvetica Neue', sans-serif;
+            --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+            --pad-x: 112px;
+            --pad-top: 150px;
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.8s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===========================================
+           FIXED 16:9 STAGE (viewport-base.css, full)
+           =========================================== */
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--stage-bg, #000);
+        }
+        .deck-viewport {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: var(--stage-bg, #000);
+        }
+        .deck-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            transform-origin: 0 0;
+            background: var(--slide-bg, #fff);
+        }
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            display: block;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            background: var(--slide-bg, #fff);
+        }
+        .slide.active,
+        .slide.visible {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 1;
+        }
+        img,
+        video,
+        canvas,
+        svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .deck-controls {
+            position: fixed;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+        @media print {
+            html,
+            body {
+                width: 1920px;
+                height: auto;
+                overflow: visible;
+                background: #fff;
+            }
+            .deck-viewport {
+                position: static;
+                overflow: visible;
+                background: #fff;
+            }
+            .deck-stage {
+                position: static;
+                width: auto;
+                height: auto;
+                transform: none !important;
+                background: none;
+            }
+            .slide {
+                position: relative;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                width: 1920px;
+                height: 1080px;
+                break-after: page;
+                page-break-after: always;
+            }
+            .slide:last-child {
+                break-after: auto;
+                page-break-after: auto;
+            }
+            .deck-controls {
+                display: none !important;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+        }
+
+        /* ===========================================
+           PRINT / PDF EXTRAS
+           One 1920×1080 page per slide, animations at final state.
+           =========================================== */
+        @page { size: 1920px 1080px; margin: 0; }
+        @media print {
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+            .brow .bar { transform: none !important; transition: none !important; }
+            .edit-hotzone, .edit-toggle, .progress { display: none !important; }
+            .slide { background: var(--slide-bg) !important; }
+        }
+
+        /* ===========================================
+           SLIDE ATMOSPHERE
+           Fine engineering grid + soft green glow on every slide.
+           =========================================== */
+        .slide {
+            font-family: var(--font-body);
+            color: var(--ink);
+            background:
+                radial-gradient(1100px 700px at 88% 8%, rgba(0, 191, 99, 0.10), transparent 60%),
+                radial-gradient(900px 600px at 0% 100%, rgba(0, 191, 99, 0.05), transparent 60%),
+                var(--slide-bg);
+        }
+        .slide::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--line-soft) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+            background-size: 96px 96px;
+            background-position: -1px -1px;
+            -webkit-mask-image: radial-gradient(ellipse 80% 70% at 60% 40%, #000 20%, transparent 75%);
+                    mask-image: radial-gradient(ellipse 80% 70% at 60% 40%, #000 20%, transparent 75%);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        /* ===========================================
+           DECK CHROME (inside each slide)
+           Top rail: company + context, slide number.
+           =========================================== */
+        .rail {
+            position: absolute;
+            left: var(--pad-x);
+            right: var(--pad-x);
+            top: 56px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 18px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+            z-index: 2;
+        }
+        .rail .brand { display: flex; align-items: center; gap: 14px; color: var(--ink-2); }
+        .rail .brand i {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 14px var(--accent);
+        }
+        .rail .num b { color: var(--accent); font-weight: 500; }
+
+        .content {
+            position: absolute;
+            left: var(--pad-x);
+            right: var(--pad-x);
+            top: var(--pad-top);
+            bottom: 96px;
+            z-index: 2;
+        }
+
+        /* ===========================================
+           TYPOGRAPHY
+           =========================================== */
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 20px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .eyebrow::before {
+            content: "";
+            width: 40px; height: 1px;
+            background: var(--accent);
+        }
+        h1, h2, h3 { font-weight: 400; }
+        .display {
+            font-family: var(--font-display);
+            font-size: 132px;
+            line-height: 0.98;
+            letter-spacing: -0.015em;
+        }
+        h2 {
+            font-family: var(--font-display);
+            font-size: 84px;
+            line-height: 1.02;
+            letter-spacing: -0.01em;
+            max-width: 1696px;
+        }
+        h2 em, .display em, .serif em { font-style: italic; color: var(--accent-hi); }
+        h3 {
+            font-family: var(--font-body);
+            font-size: 32px;
+            font-weight: 500;
+            line-height: 1.2;
+            letter-spacing: -0.005em;
+            color: var(--ink);
+        }
+        p, li { font-size: 25px; line-height: 1.5; color: var(--ink-2); font-weight: 300; }
+        strong { color: var(--ink); font-weight: 500; }
+        .mono { font-family: var(--font-mono); }
+        .lede { font-size: 32px; line-height: 1.45; color: var(--ink-2); font-weight: 300; max-width: 1100px; }
+        .foot {
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            font-family: var(--font-mono);
+            font-size: 16px;
+            letter-spacing: 0.04em;
+            line-height: 1.5;
+            color: var(--ink-3);
+        }
+
+        /* ===========================================
+           COMPONENTS
+           =========================================== */
+        .grid { display: grid; gap: 28px; }
+        .g3 { grid-template-columns: repeat(3, 1fr); }
+        .g2 { grid-template-columns: repeat(2, 1fr); }
+
+        .card {
+            position: relative;
+            background: linear-gradient(180deg, var(--surface-2), var(--surface));
+            border: 1px solid var(--line);
+            padding: 40px 40px 44px;
+        }
+        .card .tag {
+            font-family: var(--font-mono);
+            font-size: 17px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 22px;
+            display: block;
+        }
+        .card h3 { margin-bottom: 16px; }
+        .card p { font-size: 23px; }
+        /* corner tick marks give cards an instrument-panel feel */
+        .card::after {
+            content: "";
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 18px; height: 18px;
+            border-top: 2px solid var(--accent);
+            border-left: 2px solid var(--accent);
+        }
+
+        .big {
+            font-family: var(--font-display);
+            font-size: 104px;
+            line-height: 1;
+            color: var(--ink);
+            margin-bottom: 18px;
+            letter-spacing: -0.01em;
+        }
+        .big small { font-size: 0.42em; color: var(--ink-3); margin-left: 6px; }
+
+        .pill {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 16px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 8px 14px;
+            border: 1px solid var(--line);
+            color: var(--ink-2);
+            margin: 0 8px 8px 0;
+        }
+        .pill.on { border-color: var(--accent); color: var(--accent-hi); }
+
+        /* ===========================================
+           ANIMATIONS
+           Elements with .reveal fade/slide in when their slide becomes visible.
+           Use style="--d:N" for stagger order.
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+            transition-delay: calc(var(--d, 0) * 0.09s + 0.1s);
+        }
+        .slide.visible .reveal { opacity: 1; transform: none; }
+
+        @keyframes spin-slow { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
+
+        /* ===========================================
+           SLIDE 1 — TITLE
+           =========================================== */
+        .title-mark {
+            position: absolute;
+            right: -170px;
+            top: 110px;
+            width: 980px;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 60px rgba(0, 191, 99, 0.25));
+            animation: spin-slow 120s linear infinite;
+            z-index: 1;
+        }
+        .title-slide .content { right: 760px; top: 200px; }
+        .title-slide .display { font-size: 140px; margin-bottom: 44px; }
+        .title-meta {
+            position: absolute;
+            left: var(--pad-x);
+            bottom: 88px;
+            display: flex;
+            gap: 72px;
+            z-index: 2;
+        }
+        .title-meta div { font-family: var(--font-mono); font-size: 17px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+        .title-meta span { display: block; font-family: var(--font-body); font-size: 28px; letter-spacing: 0; text-transform: none; color: var(--ink); margin-top: 10px; }
+
+        /* ===========================================
+           SLIDE 2 — THESIS (three numbered beats)
+           =========================================== */
+        .beats { margin-top: 84px; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line); }
+        .beat { padding: 44px 48px 0 0; }
+        .beat + .beat { padding-left: 48px; border-left: 1px solid var(--line); }
+        .beat p { font-size: 28px; }
+        .beat .n { font-family: var(--font-mono); font-size: 18px; color: var(--accent); letter-spacing: 0.14em; margin-bottom: 26px; }
+        .beat h3 { font-size: 46px; font-family: var(--font-display); font-weight: 400; margin-bottom: 18px; line-height: 1.1; }
+        .beat.hl h3 { color: var(--accent-hi); font-style: italic; }
+
+        /* ===========================================
+           SLIDE 4 — SOLUTION GATE DIAGRAM
+           =========================================== */
+        .split { display: grid; grid-template-columns: 640px 976px; gap: 80px; margin-top: 52px; }
+        .gate-fig { position: relative; width: 976px; height: 520px; }
+        .node {
+            position: absolute;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            padding: 22px 26px;
+            font-size: 22px;
+            color: var(--ink-2);
+        }
+        .node b { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 16px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+        .node.agent { left: 0; top: 190px; width: 220px; height: 130px; }
+        .node.gate {
+            left: 300px; top: 110px; width: 300px; height: 290px;
+            border: 2px solid var(--accent);
+            background: radial-gradient(circle at 50% 40%, rgba(0,191,99,.16), var(--surface) 70%);
+            box-shadow: 0 0 80px rgba(0,191,99,.18);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+        .node.gate .pct { font-family: var(--font-display); font-size: 110px; line-height: .9; color: var(--accent-hi); }
+        .node.gate .pct sup { font-size: .4em; vertical-align: top; position: relative; top: 14px; }
+        .node.gate .lbl { font-family: var(--font-mono); font-size: 16px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); margin-top: 14px; }
+        .node.qpu { left: 716px; top: 20px; width: 260px; height: 130px; border-color: var(--accent); color: var(--ink); }
+        .node.qpu b { color: var(--accent-hi); }
+        .node.cls { left: 716px; top: 360px; width: 260px; height: 160px; }
+        .gate-fig svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .wire { stroke: var(--accent); stroke-width: 2; fill: none; }
+        .wire.dim { stroke: var(--ink-3); stroke-dasharray: 6 8; }
+        .wire-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: .1em; fill: var(--ink-3); text-transform: uppercase; }
+        .wire-lbl.on { fill: var(--accent-hi); }
+        .quote-bar { border-left: 2px solid var(--accent); padding-left: 32px; margin-top: 44px; }
+        .quote-bar p { font-family: var(--font-display); font-size: 40px; line-height: 1.2; color: var(--ink); font-style: italic; }
+
+        /* ===========================================
+           SLIDE 5 — PIPELINE
+           =========================================== */
+        .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-top: 72px; position: relative; }
+        .step { position: relative; border-top: 2px solid var(--accent); padding-top: 34px; }
+        .step .k { font-family: var(--font-mono); font-size: 18px; color: var(--accent); letter-spacing: .14em; }
+        .step h3 { font-family: var(--font-display); font-weight: 400; font-size: 52px; margin: 14px 0 18px; }
+        .step p { font-size: 25px; }
+        .step::before {
+            content: ""; position: absolute; top: -9px; left: 0;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--slide-bg); border: 2px solid var(--accent);
+        }
+        .step.gatestep::before { background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+        .step.gatestep h3 { color: var(--accent-hi); font-style: italic; }
+        .loop {
+            margin-top: 48px;
+            display: flex; align-items: center; gap: 28px;
+            border: 1px dashed var(--line);
+            padding: 30px 40px;
+        }
+        .loop .ico { font-family: var(--font-mono); font-size: 40px; color: var(--accent); }
+        .loop p { font-size: 26px; color: var(--ink); }
+
+        /* ===========================================
+           SLIDE 6 — BENCHMARK CHART
+           Lower route cost is better. Bars start at zero.
+           =========================================== */
+        .ev { display: grid; grid-template-columns: 1060px 1fr; gap: 90px; margin-top: 56px; }
+        .chart-title { font-family: var(--font-mono); font-size: 17px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 30px; }
+        .bgroup { margin-bottom: 30px; }
+        .bgroup .gl { font-size: 26px; color: var(--ink); font-weight: 500; margin-bottom: 14px; }
+        .bgroup .gl span { color: var(--ink-3); font-weight: 300; font-size: 22px; margin-left: 10px; }
+        .brow { display: grid; grid-template-columns: 300px 1fr; align-items: center; height: 46px; gap: 2px; }
+        .brow .bl { font-family: var(--font-mono); font-size: 18px; color: var(--ink-2); }
+        .brow .track { position: relative; height: 30px; }
+        .brow .bar {
+            height: 30px;
+            background: #3a4741;
+            border-radius: 0 4px 4px 0;
+            width: calc(var(--v) / 560 * 100%);
+            transform-origin: left;
+            transition: transform 1s var(--ease-out-expo);
+            transition-delay: .3s;
+        }
+        .brow.win .bar { background: var(--accent); }
+        .brow .val {
+            position: absolute; top: 0; height: 30px; line-height: 30px;
+            left: calc(var(--v) / 560 * 100% + 14px);
+            font-family: var(--font-mono); font-size: 18px; color: var(--ink-2);
+            white-space: nowrap;
+        }
+        .brow.win .val { color: var(--ink); }
+        .brow.win .val::after { content: "  ◀ best"; color: var(--accent-hi); }
+        .slide:not(.visible) .brow .bar { transform: scaleX(0); }
+        .axis-note { font-family: var(--font-mono); font-size: 16px; color: var(--ink-3); margin-top: 6px; }
+        .takeaways .t { padding: 30px 0; border-bottom: 1px solid var(--line); }
+        .takeaways .t:first-child { padding-top: 0; }
+        .takeaways .t .big { font-size: 76px; margin-bottom: 8px; }
+        .takeaways .t .big em { color: var(--accent-hi); }
+
+        /* ===========================================
+           SLIDE 7 — BUILT (repo cards)
+           =========================================== */
+        .repos { grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+        .repo { padding: 34px 36px 36px; }
+        .repo h3 { font-family: var(--font-mono); font-weight: 500; font-size: 27px; color: var(--ink); margin-bottom: 14px; }
+        .repo p { font-size: 21px; line-height: 1.45; }
+        .repo.lead { border-color: var(--accent); background: linear-gradient(180deg, rgba(0,191,99,.12), var(--surface)); }
+        .repo .meta { font-family: var(--font-mono); font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-top: 18px; }
+        .repo.lead .meta { color: var(--accent-hi); }
+
+        /* ===========================================
+           SLIDE 8 — TRACTION (two column ledger)
+           =========================================== */
+        .ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; margin-top: 60px; }
+        .ledger .col-h { font-family: var(--font-mono); font-size: 18px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); padding-bottom: 18px; border-bottom: 1px solid var(--accent); }
+        .entry { padding: 22px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 150px 1fr; gap: 24px; }
+        .entry .when { font-family: var(--font-mono); font-size: 17px; color: var(--ink-3); letter-spacing: .06em; padding-top: 8px; }
+        .entry h3 { font-size: 29px; margin-bottom: 8px; }
+        .entry p { font-size: 21px; }
+        .seed { margin-top: 30px; padding: 22px 28px; background: rgba(0,191,99,.08); border-left: 2px solid var(--accent); }
+        .seed p { font-size: 21px; color: var(--ink); }
+
+        /* ===========================================
+           SLIDE 9 — FOUNDER
+           =========================================== */
+        .founder { display: grid; grid-template-columns: 820px 1fr; gap: 96px; margin-top: 30px; }
+        .founder .q { font-family: var(--font-display); font-size: 76px; line-height: 1.04; color: var(--ink); }
+        .founder .q em { color: var(--accent-hi); }
+        .founder .who { margin-top: 48px; display: flex; align-items: center; gap: 26px; }
+        .founder .avatar {
+            width: 104px; height: 104px; border-radius: 50%;
+            border: 2px solid var(--accent);
+            display: grid; place-items: center;
+            font-family: var(--font-display); font-size: 46px; color: var(--accent-hi);
+            background: var(--surface);
+        }
+        .founder .who h3 { font-size: 36px; }
+        .founder .who p { font-size: 22px; color: var(--ink-3); font-family: var(--font-mono); letter-spacing: .04em; }
+        .facts { list-style: none; }
+        .facts li { padding: 22px 0 22px 44px; border-bottom: 1px solid var(--line); position: relative; font-size: 24px; }
+        .facts li::before { content: "→"; position: absolute; left: 0; top: 22px; color: var(--accent); font-family: var(--font-mono); }
+        .stats { display: flex; gap: 0; margin-top: 46px; border-top: 1px solid var(--line); }
+        .stats div { flex: 1; padding-top: 24px; }
+        .stats div + div { padding-left: 32px; border-left: 1px solid var(--line); }
+        .stats .big { font-size: 80px; margin-bottom: 4px; }
+        .stats .big em { color: var(--accent-hi); font-style: normal; }
+        .stats p { font-family: var(--font-mono); font-size: 16px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+
+        /* ===========================================
+           SLIDE 10 — MARKET / WHO PAYS
+           =========================================== */
+        .mkt { display: grid; grid-template-columns: 1fr 520px; gap: 64px; margin-top: 48px; }
+        .payers .card { margin-bottom: 22px; padding: 30px 36px; display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: start; }
+        .payers .card h3 { margin: 0; font-size: 28px; }
+        .payers .card .tag { margin-bottom: 10px; }
+        .payers .card p { font-size: 22px; }
+        .mkt-side { border-left: 1px solid var(--line); padding-left: 56px; }
+        .mkt-side .big { font-size: 96px; }
+        .mkt-side .blk { margin-bottom: 44px; }
+        .mkt-side p { font-size: 22px; }
+
+        /* ===========================================
+           SLIDE 11 — ROADMAP TIMELINE
+           =========================================== */
+        .tl { position: relative; margin-top: 120px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 28px; }
+        .tl::before { content: ""; position: absolute; left: 0; right: 0; top: 11px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent) 40%, rgba(0,191,99,.25)); }
+        .ms { position: relative; padding-top: 60px; }
+        .ms::before { content: ""; position: absolute; top: 0; left: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--slide-bg); border: 2px solid var(--accent); }
+        .ms.now::before { background: var(--accent); box-shadow: 0 0 24px var(--accent); animation: pulse 2.4s ease-in-out infinite; }
+        .ms .when { font-family: var(--font-mono); font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+        .ms h3 { font-family: var(--font-display); font-weight: 400; font-size: 46px; margin: 14px 0 18px; line-height: 1.05; }
+        .ms p { font-size: 24px; }
+        .ms.far h3 { font-style: italic; color: var(--accent-hi); }
+
+        /* ===========================================
+           SLIDE 12 — WHY EWOR
+           =========================================== */
+        .two { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px; }
+        .two .card { padding: 44px 48px; }
+        .two ul { list-style: none; }
+        .two li { padding: 16px 0 16px 44px; position: relative; border-bottom: 1px solid var(--line-soft); font-size: 25px; }
+        .two li:last-child { border-bottom: 0; }
+        .two li::before { content: "+"; position: absolute; left: 0; top: 15px; font-family: var(--font-mono); color: var(--accent); font-size: 26px; }
+        .two .need li::before { content: "?"; }
+        .two .need { border-color: var(--accent); }
+
+        /* ===========================================
+           SLIDE 13 — CLOSING
+           =========================================== */
+        .close-slide .content { top: 220px; right: 700px; }
+        .close-slide .display { font-size: 104px; line-height: 1.04; }
+        .close-mark { position: absolute; right: -60px; top: 170px; width: 760px; opacity: .85; animation: spin-slow 160s linear infinite reverse; filter: drop-shadow(0 0 60px rgba(0,191,99,.22)); }
+        .contact { position: absolute; left: var(--pad-x); bottom: 96px; display: flex; gap: 64px; z-index: 2; }
+        .contact div { font-family: var(--font-mono); font-size: 16px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+        .contact span { display: block; font-family: var(--font-body); letter-spacing: 0; text-transform: none; font-size: 28px; color: var(--ink); margin-top: 10px; }
+        .unused-close-logo { position: absolute; right: 112px; bottom: 70px; width: 210px; z-index: 2; opacity: .95; }
+
+        /* ===========================================
+           PRESENTER CHROME (outside slides)
+           =========================================== */
+        .progress { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--accent); transition: width .5s var(--ease-out-expo); z-index: 1000; }
+
+        /* ===========================================
+           INLINE EDITING (press E or hover top-left corner)
+           =========================================== */
+        .edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+        .edit-toggle {
+            position: fixed; top: 18px; left: 18px; z-index: 10001;
+            font-family: var(--font-mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+            background: var(--surface); color: var(--accent-hi); border: 1px solid var(--accent); padding: 10px 14px; cursor: pointer;
+            opacity: 0; pointer-events: none; transition: opacity .3s ease;
+        }
+        .edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+        body.editing [contenteditable="true"] { outline: 1px dashed rgba(95, 240, 164, .45); outline-offset: 4px; }
+    </style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+    <!-- ============ 01 · TITLE ============ -->
+    <section class="slide title-slide active" aria-label="Title">
+        <div class="rail">
+            <div class="brand"><i></i>Yabloko Labs</div>
+            <div class="num">EWOR Fellowship · Founder application</div>
+        </div>
+        <img class="title-mark" src="assets/logo-mark.svg" alt="">
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">Pitch deck · October 2026</div>
+            <h1 class="display reveal" style="--d:1">Give every AI agent a <em>quantum computer.</em></h1>
+            <p class="lede reveal" style="--d:2">A simulation gate decides which jobs deserve real quantum hardware, so agents can use the most expensive compute on Earth without wasting a second of it.</p>
+        </div>
+        <div class="title-meta reveal" style="--d:3">
+            <div>Founder<span>Santhosh Balasa</span></div>
+            <div>Company<span>Yabloko Labs Ltd</span></div>
+            <div>Based in<span>London · Bengaluru</span></div>
+        </div>
+    </section>
+
+    <!-- ============ 02 · THESIS ============ -->
+    <section class="slide" aria-label="Thesis">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>02</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">01 — Why now</div>
+            <h2 class="reveal" style="--d:1">Everything around you started as <em>a thought</em> in someone's mind.</h2>
+            <div class="grid beats">
+                <div class="beat reveal" style="--d:2">
+                    <div class="n">THEN</div>
+                    <h3>Ideas needed permission.</h3>
+                    <p>Degrees, capital, a team. For most people, a thought stayed a thought.</p>
+                </div>
+                <div class="beat reveal" style="--d:3">
+                    <div class="n">NOW</div>
+                    <h3>AI agents turn ideas into execution.</h3>
+                    <p>You don't need to be a scholar any more. You need an idea, and agents write, test and ship it.</p>
+                </div>
+                <div class="beat hl reveal" style="--d:4">
+                    <div class="n">NEXT</div>
+                    <h3>Agents are getting their own computers.</h3>
+                    <p>Shells, browsers, sandboxes: today's agents have a workstation. The next machine they will reach for is a <strong>quantum computer</strong>, for the problems classical machines can't crack.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 03 · PROBLEM ============ -->
+    <section class="slide" aria-label="Problem">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>03</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">02 — The problem</div>
+            <h2 class="reveal" style="--d:1">Agents learn by trying. On a quantum computer, <em>trying is expensive.</em></h2>
+            <div class="grid g3" style="margin-top:72px">
+                <div class="card reveal" style="--d:2">
+                    <span class="tag">Cost</span>
+                    <div class="big">$96<small>/ min</small></div>
+                    <p>IBM's pay-as-you-go list price for QPU time, billed per second. Every second of quantum hardware is metered.</p>
+                </div>
+                <div class="card reveal" style="--d:3">
+                    <span class="tag">Behaviour</span>
+                    <div class="big">∞<small>retries</small></div>
+                    <p>Agents iterate freely on CPUs. Pointed straight at a QPU, that same loop burns budget on jobs that were never going to work.</p>
+                </div>
+                <div class="card reveal" style="--d:4">
+                    <span class="tag">Uncertainty</span>
+                    <div class="big">“It depends”</div>
+                    <p>In our own benchmarks, quantum methods won at one problem size and lost at another. Someone has to decide, <strong>job by job</strong>, whether quantum is worth it.</p>
+                </div>
+            </div>
+            <div class="foot">Price: IBM Quantum pay-as-you-go plan, published starting rate (“from $96/min”). Benchmark detail on slide 6.</div>
+        </div>
+    </section>
+
+    <!-- ============ 04 · SOLUTION ============ -->
+    <section class="slide" aria-label="Solution">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>04</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">03 — The product</div>
+            <h2 class="reveal" style="--d:1">A simulation gate between the agent and <em>the quantum hardware.</em></h2>
+            <div class="split">
+                <div>
+                    <p class="lede reveal" style="--d:2; font-size:29px">Every quantum job an agent proposes is run first on a simulated layer and benchmarked against the best classical answer.</p>
+                    <p class="lede reveal" style="--d:3; font-size:29px; margin-top:26px">Only jobs that score in the <strong>95th percentile or above</strong> qualify for real quantum hardware. Everything else gets the classical answer, and costs nothing on the QPU.</p>
+                    <div class="quote-bar reveal" style="--d:4">
+                        <p>“The agent may propose. The gate decides what reaches the hardware.”</p>
+                    </div>
+                </div>
+                <div class="gate-fig reveal" style="--d:3">
+                    <svg viewBox="0 0 976 520" aria-hidden="true">
+                        <path class="wire" d="M220 255 L300 255"/>
+                        <path class="wire" d="M600 200 C 664 200, 652 85, 716 85"/>
+                        <path class="wire dim" d="M600 310 C 664 310, 652 440, 716 440"/>
+                    </svg>
+                    <div class="node agent"><b>Agent</b>Proposes a quantum job</div>
+                    <div class="node gate">
+                        <div class="pct">95<sup>th</sup></div>
+                        <div class="lbl">Qualification bar</div>
+                    </div>
+                    <div class="node qpu"><b>≥ 95th · Real QPU</b>Runs only jobs that earned it</div>
+                    <div class="node cls"><b>Below bar · Classical</b>Best answer returned, $0 QPU spend</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 05 · HOW IT WORKS ============ -->
+    <section class="slide" aria-label="How it works">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>05</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">04 — How it works</div>
+            <h2 class="reveal" style="--d:1">From an agent's goal to <em>a qualified quantum run</em>, in five steps.</h2>
+            <div class="pipe">
+                <div class="step reveal" style="--d:2">
+                    <div class="k">01</div><h3>Intent</h3>
+                    <p>The agent states a goal. The QuantumClaw planner breaks it into concrete decisions.</p>
+                </div>
+                <div class="step reveal" style="--d:3">
+                    <div class="k">02</div><h3>Encode</h3>
+                    <p>Decisions go into a backend-neutral IR, then compile to QUBO / BQM form. Gate-model circuits come next.</p>
+                </div>
+                <div class="step reveal" style="--d:4">
+                    <div class="k">03</div><h3>Simulate</h3>
+                    <p>Run on CPU emulators of quantum annealing and on classical solvers in parallel, at near-zero cost.</p>
+                </div>
+                <div class="step gatestep reveal" style="--d:5">
+                    <div class="k">04</div><h3>Score</h3>
+                    <p>Benchmark against a classical shadow plan. Score ≥ 95th percentile means the job is <strong>qualified</strong>.</p>
+                </div>
+                <div class="step reveal" style="--d:6">
+                    <div class="k">05</div><h3>Execute</h3>
+                    <p>Qualified jobs run on real QPUs (D-Wave today, via our Ocean sidecar). Results return to the agent.</p>
+                </div>
+            </div>
+            <div class="loop reveal" style="--d:7">
+                <div class="ico">↻</div>
+                <p>Every run is scored and stored as a reusable skill, so the gate gets sharper with every job it sees.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 06 · EVIDENCE ============ -->
+    <section class="slide" aria-label="Evidence">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>06</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">05 — Early evidence</div>
+            <h2 class="reveal" style="--d:1">No backend always wins. <em>So the gate is the product.</em></h2>
+            <div class="ev">
+                <div class="reveal" style="--d:2">
+                    <div class="chart-title">Median route cost · Q-Router benchmark · lower is better</div>
+                    <div class="bgroup">
+                        <div class="gl">8 stops <span>quantum-inspired wins</span></div>
+                        <div class="brow win"><div class="bl">annealing emulator</div><div class="track"><div class="bar" style="--v:441.5"></div><div class="val" style="--v:441.5">441.5</div></div></div>
+                        <div class="brow"><div class="bl">simulated annealing</div><div class="track"><div class="bar" style="--v:468.9"></div><div class="val" style="--v:468.9">468.9</div></div></div>
+                        <div class="brow"><div class="bl">classical heuristic</div><div class="track"><div class="bar" style="--v:490.8"></div><div class="val" style="--v:490.8">490.8</div></div></div>
+                    </div>
+                    <div class="bgroup">
+                        <div class="gl">10 stops <span>classical wins</span></div>
+                        <div class="brow"><div class="bl">annealing emulator</div><div class="track"><div class="bar" style="--v:520.7"></div><div class="val" style="--v:520.7">520.7</div></div></div>
+                        <div class="brow"><div class="bl">simulated annealing</div><div class="track"><div class="bar" style="--v:517.4"></div><div class="val" style="--v:517.4">517.4</div></div></div>
+                        <div class="brow win"><div class="bl">classical heuristic</div><div class="track"><div class="bar" style="--v:500.9"></div><div class="val" style="--v:500.9">500.9</div></div></div>
+                    </div>
+                    <div class="axis-note">Bars start at 0. Emulator at 10 stops: best seed shown (range 520.7–538.2).</div>
+                </div>
+                <div class="takeaways">
+                    <div class="t reveal" style="--d:3">
+                        <div class="big"><em>10%</em> shorter</div>
+                        <p>At 8 stops, the quantum-annealing emulator beat the classical heuristic (441.5 vs 490.8).</p>
+                    </div>
+                    <div class="t reveal" style="--d:4">
+                        <div class="big">4% longer</div>
+                        <p>At 10 stops it lost (≥ 520.7 vs 500.9). A fixed “always quantum” rule would have been wrong.</p>
+                    </div>
+                    <div class="t reveal" style="--d:5; border-bottom:0">
+                        <p><strong>Measure first, then spend.</strong> The gate picks the winner per job, before any QPU second is billed.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="foot">Source: QuantumClaw <span class="mono">scripts/benchmark_sweep.py</span>. Deterministic instances, 5 repeats × 2 seed bases. The annealing emulator (dwave-sqa) runs on CPU and is not quantum hardware. Small sample, so read as directional.</div>
+        </div>
+    </section>
+
+    <!-- ============ 07 · ALREADY BUILT ============ -->
+    <section class="slide" aria-label="Already built">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>07</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">06 — What already exists</div>
+            <h2 class="reveal" style="--d:1">Not just a slide. <em>The foundation is already shipping.</em></h2>
+            <div class="grid repos">
+                <div class="card repo lead reveal" style="--d:2">
+                    <h3>QuantumClaw</h3>
+                    <p>Rust agent runtime with hybrid classical + quantum-inspired planning, a policy gate, and pluggable solvers up to a real D-Wave QPU.</p>
+                    <div class="meta">Rust · v0.3.0 on crates.io · MIT</div>
+                </div>
+                <div class="card repo reveal" style="--d:3">
+                    <h3>quantumclaw-dwave</h3>
+                    <p>Python sidecar that connects the runtime to D-Wave Ocean: simulated annealing, annealing emulator, Leap hybrid and QPU.</p>
+                    <div class="meta">Python · on PyPI</div>
+                </div>
+                <div class="card repo reveal" style="--d:4">
+                    <h3>quantum-annealing-accelerator</h3>
+                    <p>p-bit Ising machine in synthesizable SystemVerilog, plus a digital twin. 95% success on 8-spin Max-Cut in simulation.</p>
+                    <div class="meta">SystemVerilog · Python · React</div>
+                </div>
+                <div class="card repo reveal" style="--d:5">
+                    <h3>quantum-instruction-cache</h3>
+                    <p>Deterministic instruction cache and prefetch engine for quantum pulse instructions.</p>
+                    <div class="meta">SystemVerilog</div>
+                </div>
+                <div class="card repo reveal" style="--d:6">
+                    <h3>minn-sim</h3>
+                    <p>Matchgate simulator for a measurement-induced quantum neural network, with proofs in Lean 4.</p>
+                    <div class="meta">Rust · Lean 4</div>
+                </div>
+                <div class="card repo reveal" style="--d:7">
+                    <h3>truthlens</h3>
+                    <p>AI hallucination detector with formally verified trust scoring: the same “score before you trust” idea as the gate.</p>
+                    <div class="meta">Rust</div>
+                </div>
+            </div>
+            <div class="foot">104 public repositories at github.com/yablokolabs: quantum, agents, Rust/C++ systems, avionics, formal methods.</div>
+        </div>
+    </section>
+
+    <!-- ============ 08 · TRACTION ============ -->
+    <section class="slide" aria-label="Traction">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>08</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">07 — Traction</div>
+            <h2 class="reveal" style="--d:1">I've already taken quantum to <em>governments, ports and enterprises.</em></h2>
+            <div class="ledger">
+                <div class="reveal" style="--d:2">
+                    <div class="col-h">Quantum pitches</div>
+                    <div class="entry">
+                        <div class="when">EU</div>
+                        <div><h3>Horizon Europe consortium proposal</h3><p>Pitched a hybrid quantum optimisation project as part of an EU consortium, with D-Wave involved.</p></div>
+                    </div>
+                    <div class="entry">
+                        <div class="when">AUG 2025</div>
+                        <div><h3>Visakhapatnam Port Authority, India</h3><p>EOI for Q-Port Optimizer: berths, cranes, yard slots and truck routes co-optimised as one QUBO on a hybrid quantum pipeline.</p></div>
+                    </div>
+                    <div class="seed"><p>Where the gate idea came from: every quantum plan we proposed needed a classical fallback. The gate makes that choice automatically.</p></div>
+                </div>
+                <div class="reveal" style="--d:3">
+                    <div class="col-h">Delivery</div>
+                    <div class="entry">
+                        <div class="when">LIVE</div>
+                        <div><h3>AB InBev, via Watchtower</h3><p>Multi-country marketing mix modelling platform across Brazil, Korea, Colombia, Argentina and the USA.</p></div>
+                    </div>
+                    <div class="entry">
+                        <div class="when">DEFENCE</div>
+                        <div><h3>NG-MIMA, with Indra Sistemas</h3><p>Technical capability partner on next-gen military avionics: C++ proof of concept in an EU programme of 26 entities.</p></div>
+                    </div>
+                    <div class="entry">
+                        <div class="when">PRODUCTS</div>
+                        <div><h3>Q-Router · Q-AdMix · Q-Porter · Q-Consent</h3><p>Quantum-inspired products for routing, ad attribution, port logistics and consent.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 09 · FOUNDER ============ -->
+    <section class="slide" aria-label="Founder">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>09</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">08 — The founder</div>
+            <div class="founder">
+                <div>
+                    <p class="q reveal" style="--d:1">“I'd introduce myself as just a human, and my home is <em>planet Earth.</em>”</p>
+                    <div class="who reveal" style="--d:2">
+                        <div class="avatar">SB</div>
+                        <div><h3>Santhosh Balasa</h3><p>Founder &amp; CEO · Yabloko Labs</p></div>
+                    </div>
+                    <div class="stats reveal" style="--d:3">
+                        <div><div class="big"><em>15+</em></div><p>Years engineering</p></div>
+                        <div><div class="big"><em>30×</em></div><p>C++ speed-up delivered</p></div>
+                        <div><div class="big"><em>104</em></div><p>Public repos</p></div>
+                    </div>
+                </div>
+                <ul class="facts reveal" style="--d:2">
+                    <li><strong>Hands-on builder.</strong> Writes the code, not just the slides: C++, Rust, Python, SystemVerilog.</li>
+                    <li><strong>30× performance gain</strong> in C++ for a global, industry-leading client.</li>
+                    <li><strong>Enterprise scale.</strong> Architected analytics platforms for Fortune 500 clients: Kubernetes, async systems, CI/CD.</li>
+                    <li><strong>High-assurance pedigree.</strong> Avionics PoC, defence programmes, secured data-centre environments.</li>
+                    <li><strong>Quantum stack.</strong> Qiskit, Cirq, PennyLane, D-Wave Ocean, tensor networks; formal verification in Lean 4.</li>
+                    <li><strong>Founded Yabloko Labs in 2025.</strong> Registered in the UK and India (DPIIT-recognised startup).</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 10 · MARKET ============ -->
+    <section class="slide" aria-label="Market">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>10</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">09 — Who pays</div>
+            <h2 class="reveal" style="--d:1">Three buyers, one promise: <em>pay for quantum only when it wins.</em></h2>
+            <div class="mkt">
+                <div class="payers">
+                    <div class="card reveal" style="--d:2">
+                        <div><span class="tag">Enterprises</span><h3>Hard optimisation problems</h3></div>
+                        <p>Logistics, ports, ad spend, finance. Pay per gated job plus a subscription, and only pay QPU prices when the QPU actually wins.</p>
+                    </div>
+                    <div class="card reveal" style="--d:3">
+                        <div><span class="tag">Quantum clouds</span><h3>Fewer, better jobs</h3></div>
+                        <p>The gate sends providers qualified workloads with real results, so their customers come back. We take a revenue share on routed QPU spend.</p>
+                    </div>
+                    <div class="card reveal" style="--d:4">
+                        <div><span class="tag">Agent platforms</span><h3>Quantum as a tool</h3></div>
+                        <p>A drop-in tool (MCP / skill) gives any agent safe access to quantum hardware, with budget limits and audit built in.</p>
+                    </div>
+                </div>
+                <div class="mkt-side reveal" style="--d:3">
+                    <div class="blk">
+                        <div class="big">$1B+</div>
+                        <p>Revenue earned by quantum computing companies in 2025, projected to reach up to <strong>$4.4B by 2028</strong>.</p>
+                    </div>
+                    <div class="blk">
+                        <div class="big">$1.3–2.7T</div>
+                        <p>Economic value quantum could create for companies worldwide by 2035.</p>
+                    </div>
+                    <p class="mono" style="font-size:16px; color:var(--ink-3)">Source: McKinsey Quantum Technology Monitor 2026.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 11 · ROADMAP ============ -->
+    <section class="slide" aria-label="Roadmap">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>11</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">10 — Roadmap</div>
+            <h2 class="reveal" style="--d:1">Thinking ten years ahead, <em>shipping every week.</em></h2>
+            <div class="tl">
+                <div class="ms now reveal" style="--d:2">
+                    <div class="when">Today</div>
+                    <h3>Runtime live</h3>
+                    <p>QuantumClaw 0.3 on crates.io. Classical, emulator and D-Wave backends behind one interface.</p>
+                </div>
+                <div class="ms reveal" style="--d:3">
+                    <div class="when">+6 months</div>
+                    <h3>Gate MVP</h3>
+                    <p>Scoring against classical shadow plans, the 95th-percentile qualifier, and a cost report for every job.</p>
+                </div>
+                <div class="ms reveal" style="--d:4">
+                    <div class="when">+12 months</div>
+                    <h3>Multi-QPU</h3>
+                    <p>Annealing plus gate-model providers. MCP tool for any agent. First 3 design partners in logistics.</p>
+                </div>
+                <div class="ms reveal" style="--d:5">
+                    <div class="when">+3 years</div>
+                    <h3>Default layer</h3>
+                    <p>The standard routing layer between AI agents and quantum clouds.</p>
+                </div>
+                <div class="ms far reveal" style="--d:6">
+                    <div class="when">+10 years</div>
+                    <h3>Quantum, like GPUs</h3>
+                    <p>Any agent reaches a quantum computer as easily as it reaches a GPU today.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 12 · WHY EWOR ============ -->
+    <section class="slide" aria-label="Why EWOR">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>12</b> / 13</div></div>
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">11 — Why EWOR</div>
+            <h2 class="reveal" style="--d:1">I can build almost anything. <em>I want help building one company.</em></h2>
+            <div class="two">
+                <div class="card reveal" style="--d:2">
+                    <span class="tag">What I bring</span>
+                    <ul>
+                        <li>A working quantum agent runtime, published and open source</li>
+                        <li>Depth from silicon (SystemVerilog) to agents (Rust, LLMs)</li>
+                        <li>Quantum proposals already in front of the EU and Indian ports</li>
+                        <li>Enterprise and defence delivery experience in Europe</li>
+                    </ul>
+                </div>
+                <div class="card need reveal" style="--d:3">
+                    <span class="tag">What I need from EWOR</span>
+                    <ul>
+                        <li><strong>Focus:</strong> turning a studio of many products into one company</li>
+                        <li><strong>Go-to-market</strong> mentorship from founders who have scaled</li>
+                        <li><strong>Capital</strong> for QPU benchmarking credits and the first two engineers</li>
+                        <li><strong>Introductions</strong> to quantum cloud providers and European design partners</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 13 · CLOSING ============ -->
+    <section class="slide close-slide" aria-label="Closing">
+        <div class="rail"><div class="brand"><i></i>Yabloko Labs</div><div class="num"><b>13</b> / 13</div></div>
+        <img class="close-mark" src="assets/logo-mark.svg" alt="">
+        <div class="content">
+            <div class="eyebrow reveal" style="--d:0">Let's build it</div>
+            <h1 class="display reveal" style="--d:1">Give agents the hardest computer on Earth, and <em>make every second count.</em></h1>
+        </div>
+        <div class="contact reveal" style="--d:2">
+            <div>Email<span>ceo@yablokolabs.com</span></div>
+            <div>Web<span>yablokolabs.com</span></div>
+            <div>Code<span>github.com/yablokolabs</span></div>
+        </div>
+    </section>
+
+</main>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="edit-hotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">Edit</button>
+
+<script>
+    /* ===========================================
+       SLIDE PRESENTATION CONTROLLER
+       Keyboard (arrows / space / PgUp / PgDn / Home / End), wheel, swipe.
+       =========================================== */
+    class SlidePresentation {
+        constructor() {
+            this.slides = document.querySelectorAll('.slide');
+            this.stage = document.getElementById('deckStage');
+            this.progress = document.getElementById('progress');
+            this.current = 0;
+            this.wheelLock = false;
+            this.setupStageScale();
+            this.setupKeyboardNav();
+            this.setupWheelNav();
+            this.setupTouchNav();
+            const fromHash = parseInt(location.hash.replace('#', ''), 10);
+            this.show(Number.isFinite(fromHash) ? fromHash - 1 : 0);
+        }
+        setupStageScale() {
+            const scale = () => {
+                const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+                const x = (window.innerWidth - 1920 * f) / 2;
+                const y = (window.innerHeight - 1080 * f) / 2;
+                this.stage.style.transform = `translate(${x}px, ${y}px) scale(${f})`;
+            };
+            scale();
+            window.addEventListener('resize', scale);
+        }
+        setupKeyboardNav() {
+            document.addEventListener('keydown', (e) => {
+                if (e.target.isContentEditable) return;
+                if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); this.show(this.current + 1); }
+                if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.show(this.current - 1); }
+                if (e.key === 'Home') this.show(0);
+                if (e.key === 'End') this.show(this.slides.length - 1);
+            });
+        }
+        setupWheelNav() {
+            window.addEventListener('wheel', (e) => {
+                if (this.wheelLock || Math.abs(e.deltaY) < 20) return;
+                this.wheelLock = true;
+                this.show(this.current + (e.deltaY > 0 ? 1 : -1));
+                setTimeout(() => (this.wheelLock = false), 700);
+            }, { passive: true });
+        }
+        setupTouchNav() {
+            let sx = 0, sy = 0;
+            window.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+            window.addEventListener('touchend', (e) => {
+                const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+                if (Math.max(Math.abs(dx), Math.abs(dy)) < 40) return;
+                const forward = Math.abs(dx) > Math.abs(dy) ? dx < 0 : dy < 0;
+                this.show(this.current + (forward ? 1 : -1));
+            }, { passive: true });
+        }
+        show(i) {
+            this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+            this.slides.forEach((s, n) => {
+                s.classList.toggle('active', n === this.current);
+                s.classList.toggle('visible', n === this.current);
+            });
+            this.progress.style.width = ((this.current + 1) / this.slides.length * 100) + '%';
+            history.replaceState(null, '', '#' + (this.current + 1));
+        }
+    }
+    const deck = new SlidePresentation();
+
+    /* ===========================================
+       INLINE EDITOR
+       E or top-left hover → toggle edit mode. Ctrl/Cmd+S downloads the edited HTML.
+       Edits auto-save to localStorage per element.
+       =========================================== */
+    const editor = {
+        isActive: false,
+        sel: '.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide .big, .slide .tag, .slide .eyebrow, .slide .when, .slide .contact span, .slide .title-meta span',
+        key: 'yabloko-ewor-deck-edits',
+        init() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(this.key) || '{}');
+                document.querySelectorAll(this.sel).forEach((el, i) => { if (saved[i] != null) el.innerHTML = saved[i]; });
+            } catch (e) { /* storage unavailable: ignore */ }
+        },
+        toggleEditMode() {
+            this.isActive = !this.isActive;
+            document.body.classList.toggle('editing', this.isActive);
+            document.getElementById('editToggle').classList.toggle('active', this.isActive);
+            document.getElementById('editToggle').textContent = this.isActive ? 'Done' : 'Edit';
+            document.querySelectorAll(this.sel).forEach(el => el.setAttribute('contenteditable', this.isActive ? 'true' : 'false'));
+            if (!this.isActive) this.save();
+        },
+        save() {
+            try {
+                const data = {};
+                document.querySelectorAll(this.sel).forEach((el, i) => (data[i] = el.innerHTML));
+                localStorage.setItem(this.key, JSON.stringify(data));
+            } catch (e) { /* ignore */ }
+        },
+        download() {
+            const clone = document.documentElement.cloneNode(true);
+            clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+            clone.querySelector('body').classList.remove('editing');
+            const blob = new Blob(['<!DOCTYPE html>\n' + clone.outerHTML], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'yabloko-labs-ewor-pitch.html';
+            a.click();
+        }
+    };
+    editor.init();
+
+    const editToggle = document.getElementById('editToggle');
+    const hotzone = document.querySelector('.edit-hotzone');
+    let hideTimeout = null;
+    editToggle.addEventListener('click', () => editor.toggleEditMode());
+    hotzone.addEventListener('click', () => editor.toggleEditMode());
+    hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); editToggle.classList.add('show'); });
+    hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+    editToggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    document.addEventListener('keydown', (e) => {
+        if ((e.key === 'e' || e.key === 'E') && !e.target.isContentEditable) editor.toggleEditMode();
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); editor.save(); editor.download(); }
+    });
+    document.addEventListener('input', () => editor.isActive && editor.save());
+</script>
+</body>
+</html>
